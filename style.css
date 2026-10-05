@@ -46,3 +46,13 @@ h1 i{font-weight:400}
 
 /* keep the hint readable on long sentences */
 .hint{white-space:normal;text-align:center;width:min(86vw,360px)}
+
+.layer-ctl{position:absolute;z-index:6;left:12px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:10px}
+.lbtn{width:60px;padding:8px 4px 7px;border:1px solid var(--line);border-radius:18px;background:rgba(4,5,13,.55);color:rgba(255,255,255,.6);
+  display:flex;flex-direction:column;align-items:center;gap:3px;backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);transition:background .2s,border-color .2s,color .2s}
+.lbtn .li{font-size:21px;line-height:1.1}
+.lbtn .ll{font-size:8.5px;line-height:1.2;letter-spacing:.02em;text-align:center}
+.lbtn.on{background:rgba(231,198,163,.2);border-color:rgba(231,198,163,.6);color:#fff}
+.letter-next{margin-top:34px;padding-top:22px;border-top:1px solid rgba(255,255,255,.1);text-align:center;font:italic 15px/1.7 Georgia,serif;color:rgba(255,255,255,.55)}
+.letter-next span{display:block;font-style:normal;font-size:13px;color:rgba(231,198,163,.8);margin-bottom:6px}
+.letter-next b{font-weight:400;font-size:21px;color:#fff;letter-spacing:.01em}
