@@ -34,3 +34,15 @@ h1 i{font-weight:400}
 .final-prompt{position:absolute;z-index:8;left:20px;right:20px;bottom:calc(env(safe-area-inset-bottom) + 108px);text-align:center;padding:27px 20px;border:1px solid rgba(255,255,255,.14);border-radius:28px;background:rgba(5,6,16,.82);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}.final-prompt h2{font:400 34px Georgia,serif;margin:10px 0}.final-prompt p{color:rgba(255,255,255,.55);font-size:13px;margin:0 0 18px}
 .letter{position:absolute;z-index:20;inset:12px 12px calc(env(safe-area-inset-bottom) + 12px);overflow:auto;padding:42px 27px 35px;border:1px solid rgba(255,255,255,.15);border-radius:29px;background:linear-gradient(160deg,rgba(22,20,26,.96),rgba(8,8,17,.97));box-shadow:0 35px 100px rgba(0,0,0,.7);animation:up .4s ease-out}.letter-top{font-size:9px;letter-spacing:.22em;color:rgba(255,255,255,.35)}.letter h2{font:400 38px Georgia,serif;margin:28px 0 22px}.letter p{font:16px/1.8 Georgia,serif;color:rgba(255,255,255,.72);margin:0 0 18px}.letter .love{color:#fff;font-style:italic;margin-top:28px}.letter-sign{text-align:right;font:italic 16px Georgia,serif;color:rgba(255,255,255,.5);margin-top:30px}
 @media(min-width:700px){.sheet,.final-prompt{max-width:470px;left:50%;right:auto;width:calc(100% - 34px);transform:translateX(-50%)}.letter{left:50%;right:auto;width:520px;transform:translateX(-50%)}}
+/* ===== APPEND THIS TO THE BOTTOM OF style.css ===== */
+.sky-wrap canvas{touch-action:none}
+
+/* telescope zoom controls (right edge, thumb-reachable) */
+.zoom-ctl{position:absolute;z-index:6;right:12px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;
+  border:1px solid var(--line);border-radius:26px;background:rgba(4,5,13,.55);backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);padding:4px}
+.zbtn{width:44px;height:44px;border:0;border-radius:50%;background:transparent;color:#fff;font-size:24px;line-height:1;display:grid;place-items:center}
+.zbtn:active{background:rgba(255,255,255,.14)}
+.zread{border:0;background:transparent;color:rgba(255,255,255,.55);font-size:10px;letter-spacing:.06em;padding:4px 0;min-width:44px}
+
+/* keep the hint readable on long sentences */
+.hint{white-space:normal;text-align:center;width:min(86vw,360px)}
