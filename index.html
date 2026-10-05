@@ -41,6 +41,13 @@
         <button class="mode" data-mode="notes">Hidden notes</button>
       </div>
 
+      <!-- NEW: telescope-style zoom controls -->
+      <div class="zoom-ctl" role="group" aria-label="Zoom">
+        <button id="zin" class="zbtn" aria-label="Zoom in">+</button>
+        <button id="zread" class="zread" aria-label="Reset zoom">×1.0</button>
+        <button id="zout" class="zbtn" aria-label="Zoom out">−</button>
+      </div>
+
       <div id="starCard" class="sheet hidden">
         <button id="closeStar" class="sheet-x">×</button>
         <div class="sheet-symbol">✦</div>
@@ -78,7 +85,7 @@
         <h3>About this sky</h3>
         <p>This is the sky over Banaras on <b>30 October 2001</b>. We don't know your exact birth time, so I didn't make one up. Instead, you can wander through the whole night.</p>
         <p class="personal">Somewhere in that night, you arrived. And years later, someone was lucky enough to love you. ♡</p>
-        <p class="fine">The map uses astronomical coordinates and calculates the apparent sky from Banaras. The experience intentionally highlights bright named stars and constellations for a smooth iPhone experience.</p>
+        <p class="fine">The map uses astronomical coordinates and calculates the apparent sky from Banaras. Zoom in and fainter stars appear, the way they would through a telescope.</p>
       </div>
 
       <div id="finalPrompt" class="final-prompt hidden">
@@ -106,7 +113,7 @@
         <div class="time-line"><button id="play" class="play" aria-label="Play through the night">▶</button><input id="time" type="range" min="0" max="720" value="240" step="5" aria-label="Time through the night"></div>
         <div class="time-labels"><span>6 PM</span><strong id="timeText">10:00 PM</strong><span>6 AM</span></div>
       </div>
-      <div id="hint" class="hint">Tap a bright star · drag to look around</div>
+      <div id="hint" class="hint">Pinch to zoom · double-tap to magnify · tap a star</div>
     </div>
   </section>
 </main>
