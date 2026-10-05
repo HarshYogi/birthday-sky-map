@@ -41,6 +41,12 @@
         <button class="mode" data-mode="notes">Hidden notes</button>
       </div>
 
+      <!-- sky layers: separate, optional toggles -->
+      <div class="layer-ctl" role="group" aria-label="Sky layers">
+        <button id="tSolar" class="lbtn" aria-pressed="false"><span class="li">☾</span><span class="ll">Moon &amp; planets</span></button>
+        <button id="tMW" class="lbtn" aria-pressed="false"><span class="li">✧</span><span class="ll">Milky Way</span></button>
+      </div>
+
       <!-- NEW: telescope-style zoom controls -->
       <div class="zoom-ctl" role="group" aria-label="Zoom">
         <button id="zin" class="zbtn" aria-label="Zoom in">+</button>
@@ -85,7 +91,7 @@
         <h3>About this sky</h3>
         <p>This is the sky over Banaras on <b>30 October 2001</b>. We don't know your exact birth time, so I didn't make one up. Instead, you can wander through the whole night.</p>
         <p class="personal">Somewhere in that night, you arrived. And years later, someone was lucky enough to love you. ♡</p>
-        <p class="fine">The map uses astronomical coordinates and calculates the apparent sky from Banaras. Zoom in and fainter stars appear, the way they would through a telescope.</p>
+        <p class="fine">The map uses astronomical coordinates and calculates the apparent sky from Banaras. Zoom in and fainter stars appear, the way they would through a telescope. The Moon, planets and Milky Way sit on their own toggles, and the Moon and planets are calculated for that exact night.</p>
       </div>
 
       <div id="finalPrompt" class="final-prompt hidden">
@@ -107,6 +113,7 @@
         <p>So whenever you miss me, come back here. Pick a star. Stay for a minute. Look up.</p>
         <p class="love">Happy birthday, Akshu.<br>My favourite person under this enormous sky. ♡</p>
         <div class="letter-sign">— yours</div>
+        <div class="letter-next"><span>✦</span>Day 1 is done.<br><b>24 more to go.</b> ♡</div>
       </div>
 
       <div class="controls">
