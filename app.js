@@ -90,10 +90,106 @@ const Rad=z=>Math.min(W,H)*.74*(z===undefined?zoom:z);
 function project(alt,az){const r=(90-clamp(alt,-4,90))/93,da=(((az-centerAz+540)%360)-180)*RAD,R=Rad();return{x:W/2+Math.sin(da)*r*R,y:H*.52+panY-Math.cos(da)*r*R}}
 function size(n){return ({Sirius:4.8,Canopus:4.2,Vega:4.3,Capella:4.2,Arcturus:4.1,Rigel:4,Betelgeuse:4,Procyon:3.9,Altair:3.9,Aldebaran:3.8,Antares:4,Spica:3.8,Pollux:3.6,Deneb:3.6,Regulus:3.6,Polaris:3.5}[n]||2.3)}
 
+
+/* ---------- Moon, planets & Sun (low-precision orbits: accurate to well under a degree) ---------- */
+const TAU=Math.PI*2,mod=(v,n)=>((v%n)+n)%n;
+const EL={
+ mercury:[0.38709927,0.00000037,0.20563593,0.00001906,7.00497902,-0.00594749,252.25032350,149472.67411175,77.45779628,0.16047689,48.33076593,-0.12534081],
+ venus:[0.72333566,0.00000390,0.00677672,-0.00004107,3.39467605,-0.00078890,181.97909950,58517.81538729,131.60246718,0.00268329,76.67984255,-0.27769418],
+ earth:[1.00000261,0.00000562,0.01671123,-0.00004392,-0.00001531,-0.01294668,100.46457166,35999.37244981,102.93768193,0.32327364,0,0],
+ mars:[1.52371034,0.00001847,0.09339410,0.00007882,1.84969142,-0.00813131,-4.55343205,19140.30268499,-23.94362959,0.44441088,49.55953891,-0.29257343],
+ jupiter:[5.20288700,-0.00011607,0.04838624,-0.00013253,1.30439695,-0.00183714,34.39644051,3034.74612775,14.72847983,0.21252668,100.47390909,0.20469106],
+ saturn:[9.53667594,-0.00125060,0.05386179,-0.00050991,2.48599187,0.00193609,49.95424423,1222.49362201,92.59887831,-0.41897216,113.66242448,-0.28867794]
+};
+function helio(el,T){
+  const a=el[0]+el[1]*T,e=el[2]+el[3]*T,I=(el[4]+el[5]*T)*RAD,L=el[6]+el[7]*T,w=el[8]+el[9]*T,O=el[10]+el[11]*T;
+  const M=(mod(L-w+180,360)-180)*RAD;let E=M;for(let i=0;i<8;i++)E-=(E-e*Math.sin(E)-M)/(1-e*Math.cos(E));
+  const xp=a*(Math.cos(E)-e),yp=a*Math.sqrt(1-e*e)*Math.sin(E),om=(w-O)*RAD,Om=O*RAD;
+  const co=Math.cos(om),so=Math.sin(om),cO=Math.cos(Om),sO=Math.sin(Om),cI=Math.cos(I),sI=Math.sin(I);
+  return[(co*cO-so*sO*cI)*xp+(-so*cO-co*sO*cI)*yp,(co*sO+so*cO*cI)*xp+(-so*sO+co*cO*cI)*yp,so*sI*xp+co*sI*yp];
+}
+function geoOf(name,T){
+  const e=helio(EL.earth,T),eps=23.43928*RAD;
+  const g=name==="sun"?[-e[0],-e[1],-e[2]]:(q=>[q[0]-e[0],q[1]-e[1],q[2]-e[2]])(helio(EL[name],T));
+  const dist=Math.hypot(g[0],g[1],g[2]),ye=g[1]*Math.cos(eps)-g[2]*Math.sin(eps),ze=g[1]*Math.sin(eps)+g[2]*Math.cos(eps);
+  return{raH:mod(Math.atan2(ye,g[0]),TAU)/RAD/15,dec:Math.asin(ze/dist)/RAD,dist,lon:mod(Math.atan2(g[1],g[0])/RAD,360)};
+}
+function moonPos(T){
+  const L=218.3164477+481267.88123421*T,Dd=297.8501921+445267.1114034*T,Ms=357.5291092+35999.0502909*T,Mm=134.9633964+477198.8675055*T,F=93.272095+483202.0175233*T;
+  const s=x=>Math.sin(x*RAD);
+  const lon=L+6.288774*s(Mm)+1.274027*s(2*Dd-Mm)+0.658314*s(2*Dd)+0.213618*s(2*Mm)-0.185116*s(Ms)-0.114332*s(2*F)+0.058793*s(2*Dd-2*Mm)+0.057066*s(2*Dd-Ms-Mm)+0.053322*s(2*Dd+Mm)+0.045758*s(2*Dd-Ms)-0.040923*s(Ms-Mm)-0.03472*s(Dd)-0.030383*s(Ms+Mm);
+  const lat=5.128122*s(F)+0.280602*s(Mm+F)+0.277693*s(Mm-F)+0.173237*s(2*Dd-F)+0.055413*s(2*Dd-Mm+F)+0.046271*s(2*Dd-Mm-F)+0.032573*s(2*Dd+F);
+  const eps=(23.4393-0.013*T)*RAD,l=lon*RAD,b=lat*RAD;
+  const ra=Math.atan2(Math.sin(l)*Math.cos(eps)-Math.tan(b)*Math.sin(eps),Math.cos(l));
+  const dec=Math.asin(Math.sin(b)*Math.cos(eps)+Math.cos(b)*Math.sin(eps)*Math.sin(l));
+  return{raH:mod(ra,TAU)/RAD/15,dec:dec/RAD,lon:mod(lon,360),lat};
+}
+const BODY_STYLE={venus:{n:"Venus",r:5.2,c:"255,244,216"},jupiter:{n:"Jupiter",r:5.4,c:"255,231,196"},saturn:{n:"Saturn",r:4,c:"241,220,166"},mars:{n:"Mars",r:3.8,c:"255,154,116"},mercury:{n:"Mercury",r:3,c:"217,212,200"}};
+function solarAt(tm){
+  const T=(jd(DATE.y,DATE.m,DATE.d,18+tm/60-TZ)-2451545)/36525,lst=lstFor(tm);
+  const sun=geoOf("sun",T),mn=moonPos(T),Dl=mod(mn.lon-sun.lon,360);
+  const psi=Math.acos(Math.cos(mn.lat*RAD)*Math.cos(Dl*RAD))/RAD;
+  const list=[{id:"moon",raH:mn.raH,dec:mn.dec,dist:.00257,D:Dl,psi,illum:(1-Math.cos(psi*RAD))/2}];
+  for(const k in BODY_STYLE){const g=geoOf(k,T);list.push({id:k,raH:g.raH,dec:g.dec,dist:g.dist})}
+  for(const b of list)b.h=horizontal(b.raH,b.dec,lst);
+  return{list,sunH:horizontal(sun.raH,sun.dec,lst)};
+}
+function phaseName(D){return D<8||D>352?"New Moon":D<82?"Waxing crescent":D<98?"First quarter":D<172?"Waxing gibbous":D<188?"Full Moon":D<262?"Waning gibbous":D<278?"Last quarter":"Waning crescent"}
+const GC={raH:17.7611,dec:-28.9362};
+const BODY_TEXT={
+  venus:["Brighter than every star, but it isn't a star at all. It's a planet wrapped in thick clouds, and hotter than a pizza oven.","The brightest thing up here after the Moon, and it's not even a star. Reminds me of someone."],
+  mars:["The red planet gets its colour from rusty iron in its dust.","A little red, a little dramatic. I say that lovingly."],
+  jupiter:["The biggest planet of all. More than a thousand Earths would fit inside it, and even binoculars can show its four largest moons.","Big planet, big heart. I thought of you."],
+  saturn:["Famous for its rings of ice and rock. Even a small telescope makes them look unreal.","The most stylish planet in the sky. You'd approve."],
+  mercury:["The smallest planet, and so close to the Sun that it's hard to catch. It only shows near the horizon around dusk or dawn.","A shy little one. Glad you spotted it."]
+};
+function bodyCard(id,b){
+  if(id==="gc")return{kicker:"OUR GALAXY",name:"Heart of the Milky Way",meta:"Toward Sagittarius · about 26,000 light-years away",desc:"Every star you can see is a neighbour in this one galaxy. At its centre sits a black hole roughly four million times heavier than our Sun.",personal:"Even a whole galaxy has a heart somewhere. I know where mine is."};
+  if(id==="moon"){
+    const waxing=b.D<180,days=waxing?Math.round((180-b.D)/12.19):Math.round((b.D-180)/12.19);
+    const line=b.illum>.985||days===0?"It's as good as full.":waxing?`It would be full in about ${days} day${days===1?"":"s"}.`:`It was full about ${days} day${days===1?"":"s"} earlier.`;
+    return{kicker:"THE MOON",name:"The Moon",meta:`${phaseName(b.D)} · ${Math.round(b.illum*100)}% lit`,desc:`${line} It's about 384,000 km away, so its light reaches your eyes in just over a second.`,personal:"Wherever we each are, it's the same Moon. Look up sometimes, and know I did too."};
+  }
+  const t=BODY_TEXT[id],mins=Math.round(b.dist*8.317);
+  return{kicker:"PLANET",name:BODY_STYLE[id].n,meta:"Wandering across the same sky as the stars",desc:`${t[0]} Its light took about ${mins} minutes to reach you.`,personal:t[1]};
+}
+/* sky-position maths for the Moon's bright edge */
+function vec3(alt,az){const a=alt*RAD,z=az*RAD;return[Math.cos(a)*Math.cos(z),Math.cos(a)*Math.sin(z),Math.sin(a)]}
+function unvec3(v){const n=Math.hypot(v[0],v[1],v[2]);return{alt:Math.asin(v[2]/n)/RAD,az:mod(Math.atan2(v[1],v[0])/RAD,360)}}
+function limbAngle(mh,sh,p0){
+  const m=vec3(mh.alt,mh.az),s=vec3(sh.alt,sh.az),d=m[0]*s[0]+m[1]*s[1]+m[2]*s[2];
+  let t=[s[0]-d*m[0],s[1]-d*m[1],s[2]-d*m[2]];const n=Math.hypot(t[0],t[1],t[2])||1;t=[t[0]/n,t[1]/n,t[2]/n];
+  const m2=unvec3([m[0]+.04*t[0],m[1]+.04*t[1],m[2]+.04*t[2]]),p1=project(m2.alt,m2.az);
+  return Math.atan2(p1.y-p0.y,p1.x-p0.x);
+}
+const MARIA=[[-.3,-.25,.26],[.12,-.32,.18],[-.05,.05,.16],[.3,.05,.12],[-.35,.18,.1],[.1,.38,.09]];
+function drawMoon(x,y,r,m,ang){
+  const gl=ctx.createRadialGradient(x,y,r*.6,x,y,r*4.4);gl.addColorStop(0,`rgba(255,244,214,${.07+.2*m.illum})`);gl.addColorStop(1,"rgba(255,244,214,0)");
+  ctx.fillStyle=gl;ctx.beginPath();ctx.arc(x,y,r*4.4,0,TAU);ctx.fill();
+  ctx.save();ctx.translate(x,y);
+  ctx.fillStyle="rgba(70,80,112,.55)";ctx.beginPath();ctx.arc(0,0,r,0,TAU);ctx.fill();   /* faint earthshine on the dark part */
+  ctx.rotate(ang);ctx.beginPath();ctx.arc(0,0,r,-Math.PI/2,Math.PI/2,false);
+  const cp=Math.cos(m.psi*RAD);for(let i=0;i<=40;i++){const t=Math.PI-i/40*Math.PI;ctx.lineTo(r*cp*Math.sin(t),-r*Math.cos(t))}
+  ctx.closePath();ctx.clip();ctx.rotate(-ang);
+  const lg=ctx.createRadialGradient(-r*.25,-r*.25,r*.1,0,0,r*1.05);lg.addColorStop(0,"#fffaf0");lg.addColorStop(1,"#d9d2c0");
+  ctx.fillStyle=lg;ctx.fillRect(-r,-r,2*r,2*r);
+  ctx.fillStyle="rgba(120,118,132,.27)";for(const q of MARIA){ctx.beginPath();ctx.arc(q[0]*r,q[1]*r,q[2]*r,0,TAU);ctx.fill()}
+  ctx.restore();
+}
+
+/* ---------- Milky Way: soft glow along the galactic plane ---------- */
+function mkSprite(rgb){const c=document.createElement("canvas");c.width=c.height=64;const g=c.getContext("2d"),gr=g.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,`rgba(${rgb},.9)`);gr.addColorStop(.4,`rgba(${rgb},.4)`);gr.addColorStop(1,`rgba(${rgb},0)`);g.fillStyle=gr;g.fillRect(0,0,64,64);return c}
+const SPR_C=mkSprite("190,205,255"),SPR_W=mkSprite("255,228,196");
+const MW=[];(function(){const r=rng(777);let n=0;
+  while(n<950){const l=r()*360,wl=Math.min(l,360-l),w=.3+.7*Math.exp(-Math.pow(wl/60,2));if(r()>w)continue;
+    const sg=5+6*Math.exp(-Math.pow(wl/35,2)),b=(r()+r()+r()+r()-2)*1.73*sg,c=galToEq(l*RAD,b*RAD);
+    MW.push({ra:c[0],dec:c[1],rad:4+r()*5,a:.016+.022*w,warm:wl<40});n++}})();
+let showSolar=false,showMW=false,solarPos=[];
+
 /* ---------- drawing ---------- */
 function draw(){
   if(!W)return;
-  LSTc=lstFor(timeMin);positions={};fvis=[];
+  LSTc=lstFor(timeMin);positions={};fvis=[];solarPos=[];
   ctx.setTransform(dpr,0,0,dpr,0,0);
   let g=ctx.createRadialGradient(W*.5,H*.42,0,W*.5,H*.52,Math.max(W,H)*.8);
   g.addColorStop(0,"#111b3b");g.addColorStop(.5,"#080d22");g.addColorStop(1,"#02030a");
@@ -107,6 +203,15 @@ function draw(){
   [["N",0],["E",90],["S",180],["W",270]].forEach(([l,a])=>{const da=(a-centerAz)*RAD,x=cx+Math.sin(da)*rr*1.06,y=cy-Math.cos(da)*rr*1.06;if(x>10&&x<W-10&&y>10&&y<H-10){ctx.fillStyle=l==="N"?"rgba(231,198,163,.95)":"rgba(255,255,255,.5)";ctx.fillText(l,x,y)}});
   /* positions of the named stars */
   for(const s of STARS){const h=horizontal(s[1],s[2]);if(h.alt>0){const p=project(h.alt,h.az);positions[s[0]]={...p,alt:h.alt,az:h.az,s}}}
+  /* Milky Way (optional layer) */
+  if(showMW){
+    ctx.save();ctx.beginPath();ctx.arc(cx,cy,rr,0,TAU);ctx.clip();ctx.globalCompositeOperation="lighter";
+    const pxdeg=R/93;
+    for(const b of MW){const h=horizontal(b.ra,b.dec);if(h.alt<-3)continue;const p=project(h.alt,h.az),rad=b.rad*pxdeg;
+      if(p.x<-rad||p.x>W+rad||p.y<-rad||p.y>H+rad)continue;
+      ctx.globalAlpha=b.a*Math.min(1,(h.alt+3)/12);ctx.drawImage(b.warm?SPR_W:SPR_C,p.x-rad,p.y-rad,rad*2,rad*2)}
+    ctx.restore();ctx.globalAlpha=1;
+  }
   /* faint stars — a deeper sky appears the closer you look */
   const L=4.7+1.7*Math.log2(zoom),hearts=[];
   for(let i=0;i<FAINT.length;i++){
@@ -134,6 +239,39 @@ function draw(){
     if(kept.has(s[0]))hearts.push({x:p.x,y:p.y-r-9});
     if((showNames||(selected&&selected[0]===s[0]))&&p.x>0&&p.x<W&&p.y>0&&p.y<H){ctx.font="11px -apple-system,sans-serif";ctx.textAlign="left";ctx.fillStyle="rgba(255,255,255,.62)";ctx.fillText(s[0],p.x+r+6,p.y+1)}
   }
+  /* Moon & planets (optional layer) */
+  if(showSolar){
+    const sol=solarAt(timeMin),mr=11*Math.min(2.2,Math.pow(Math.max(zoom,.6),.45));
+    ctx.font="11px -apple-system,sans-serif";ctx.textAlign="left";ctx.textBaseline="middle";
+    for(const b of sol.list){
+      if(b.h.alt<=0)continue;
+      const p=project(b.h.alt,b.h.az),fade=Math.min(1,.3+b.h.alt/8);
+      if(b.id==="moon"){
+        drawMoon(p.x,p.y,mr,b,limbAngle(b.h,sol.sunH,p));
+        solarPos.push({id:"moon",x:p.x,y:p.y,r:mr,b,alt:b.h.alt,az:b.h.az});
+        ctx.fillStyle="rgba(255,255,255,.72)";if(p.x>0&&p.x<W)ctx.fillText("Moon",p.x+mr+7,p.y);
+        if(kept.has("moon"))hearts.push({x:p.x,y:p.y-mr-9});
+      }else{
+        const st=BODY_STYLE[b.id],r=st.r*grow;
+        const gl=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,r*5);gl.addColorStop(0,`rgba(${st.c},.4)`);gl.addColorStop(1,`rgba(${st.c},0)`);
+        ctx.globalAlpha=fade;ctx.fillStyle=gl;ctx.beginPath();ctx.arc(p.x,p.y,r*5,0,TAU);ctx.fill();
+        ctx.fillStyle=`rgb(${st.c})`;ctx.beginPath();ctx.arc(p.x,p.y,r,0,TAU);ctx.fill();
+        if(b.id==="saturn"){ctx.strokeStyle=`rgba(${st.c},.8)`;ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(p.x,p.y,r*2.1,r*.7,-.35,0,TAU);ctx.stroke()}
+        ctx.fillStyle="rgba(255,255,255,.72)";if(p.x>0&&p.x<W)ctx.fillText(st.n,p.x+r+8,p.y);ctx.globalAlpha=1;
+        solarPos.push({id:b.id,x:p.x,y:p.y,r:r*1.6,b,alt:b.h.alt,az:b.h.az});
+        if(kept.has(b.id))hearts.push({x:p.x,y:p.y-r-9});
+      }
+    }
+    ctx.textBaseline="middle";
+  }
+  /* the heart of the Milky Way is tappable when that layer is on */
+  if(showMW){
+    const h=horizontal(GC.raH,GC.dec);
+    if(h.alt>0){const p=project(h.alt,h.az);
+      ctx.strokeStyle="rgba(255,225,190,.5)";ctx.lineWidth=1;ctx.setLineDash([3,4]);ctx.beginPath();ctx.arc(p.x,p.y,14,0,TAU);ctx.stroke();ctx.setLineDash([]);
+      if(p.x>0&&p.x<W){ctx.font="italic 11px Georgia,serif";ctx.textAlign="left";ctx.fillStyle="rgba(255,228,196,.7)";ctx.fillText("heart of the galaxy",p.x+20,p.y)}
+      solarPos.push({id:"gc",x:p.x,y:p.y,r:14,b:null,alt:h.alt,az:h.az})}
+  }
   /* constellation names */
   if(mode==="constellations"&&zoom<3.5){ctx.font="italic 13px Georgia,serif";ctx.textAlign="center";ctx.fillStyle="rgba(231,198,163,.62)";
     for(const gp of LINES){const seen=new Set();let ax=0,ay=0;for(let i=1;i<gp.length;i++)for(const n of gp[i]){const p=positions[n];if(p&&!seen.has(n)){seen.add(n);ax+=p.x;ay+=p.y}}
@@ -143,8 +281,9 @@ function draw(){
   /* selection ring */
   let sp=null;
   if(selected&&selected.f!==undefined){const f=FAINT[selected.f],h=horizontal(f[0],f[1]);if(h.alt>0)sp=project(h.alt,h.az)}
+  else if(selected&&selected.b){const q=solarPos.find(z=>z.id===selected.b);if(q)sp=q}
   else if(selected&&positions[selected[0]])sp=positions[selected[0]];
-  if(sp){ctx.strokeStyle="rgba(255,255,255,.65)";ctx.lineWidth=1;ctx.beginPath();ctx.arc(sp.x,sp.y,17,0,Math.PI*2);ctx.stroke()}
+  if(sp){ctx.strokeStyle="rgba(255,255,255,.65)";ctx.lineWidth=1;ctx.beginPath();ctx.arc(sp.x,sp.y,sp.r?Math.max(17,sp.r+9):17,0,Math.PI*2);ctx.stroke()}
   /* zoom readout */
   const t="×"+zoom.toFixed(1);if(t!==lastReadout){lastReadout=t;const z=$("zread");if(z)z.textContent=t}
 }
@@ -218,11 +357,18 @@ function showFaint(i){
   $("cardPersonal").textContent=FAINT_PERSONAL[i%FAINT_PERSONAL.length];setKeepButton();
   $("starCard").classList.remove("hidden");draw();
 }
+function showBody(id,q){
+  const c=bodyCard(id,q.b);selected={b:id};keepKey=id===""?null:id;
+  $("cardKicker").textContent=c.kicker;$("cardName").textContent=c.name;$("cardMeta").textContent=c.meta;
+  $("cardDesc").textContent=c.desc;$("cardPersonal").textContent=c.personal;setKeepButton();
+  $("starCard").classList.remove("hidden");draw();
+}
 function updateFound(){$("foundCount").textContent=found.size;if(found.size>=NOTES.length)$("finalPrompt").classList.remove("hidden")}
 function showNote(n){$("noteTitle").textContent=n[0];$("noteText").textContent=n[1];$("noteCard").classList.remove("hidden");found.add(n[2]);updateFound()}
 
 /* ---------- touch: drag, pinch, tap, double-tap ---------- */
 function nearest(x,y){
+  for(const q of solarPos){if(Math.hypot(q.x-x,q.y-y)<Math.max(34,q.r+16))return{b:q.id,q}}
   let best=null,d=34;
   for(const s of STARS){const p=positions[s[0]];if(!p)continue;const q=Math.hypot(p.x-x,p.y-y);if(q<d){d=q;best={s}}}
   if(best)return best;
@@ -233,6 +379,7 @@ function hint(msg,ms){const h=$("hint");h.textContent=msg;if(ms)setTimeout(()=>{
 const DEFAULT_HINT="Pinch to zoom · double-tap to magnify · tap a star";
 function singleTap(x,y){
   const hit=nearest(x,y);
+  if(hit&&hit.b){showBody(hit.b,hit.q);focusOn(hit.q.alt,hit.q.az,1.6);return}
   if(hit&&hit.s){
     const s=hit.s,p=positions[s[0]];
     if(mode==="notes"){const n=NOTES.find(q=>q[2]===s[0]);n?showNote(n):showStar(s)}else showStar(s);
@@ -299,6 +446,21 @@ on("showScorpio",()=>{
   const tm=30,h=horizontal(16.4901,-26.4319,lstFor(tm)),z=1.15,r=(90-clamp(h.alt,-4,90))/93;
   flyTo({z,az:h.az,py:H*.5-H*.52+r*Rad(z),tm},1100);
   hint("Scorpius is low in the south-west early in the evening and sets soon after. Slide time forward to watch it go.",5200);
+});
+function setToggle(id,v){const b=$(id);if(!b)return;b.classList.toggle("on",v);b.setAttribute("aria-pressed",String(v))}
+function closeIfSelected(pred){if(selected&&pred(selected)){selected=null;$("starCard").classList.add("hidden")}}
+on("tSolar",()=>{
+  showSolar=!showSolar;setToggle("tSolar",showSolar);
+  if(showSolar){const m=solarAt(timeMin).list[0];
+    if(m.h.alt>0){focusOn(m.h.alt,m.h.az,1.3);hint("That's the Moon from your night. Tap it, and the planets.",4200)}
+    else hint("The Moon is below the horizon at this hour. Slide the time to find it.",4200)}
+  else closeIfSelected(x=>x.b&&x.b!=="gc");
+  draw();
+});
+on("tMW",()=>{
+  showMW=!showMW;setToggle("tMW",showMW);
+  if(showMW)hint("That soft glow is our own galaxy, seen edge-on. Tap its heart.",4200);else closeIfSelected(x=>x.b==="gc");
+  draw();
 });
 $("time").oninput=e=>{anim=null;timeMin=+e.target.value;update()};
 on("play",()=>{playing=!playing;$("play").textContent=playing?"❚❚":"▶";if(playing)tick()});
