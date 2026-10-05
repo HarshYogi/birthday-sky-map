@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#04040b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>The Night You Were Born</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="app">
+  <section id="intro" class="screen">
+    <div class="nebula n1"></div><div class="nebula n2"></div>
+    <div class="starfield" aria-hidden="true"></div>
+    <div class="intro-content">
+      <div class="eyebrow">30 · 10 · 2001</div>
+      <div class="moon-mark">☾</div>
+      <h1>The night<br><i>you</i> were born.</h1>
+      <p>A little sky from Banaras,<br>kept here just for you.</p>
+      <button id="begin" class="pill primary">Enter the night <span>→</span></button>
+      <div class="signature">For Akshu · with love</div>
+    </div>
+  </section>
+
+  <section id="journey" class="screen hidden">
+    <div class="sky-wrap">
+      <canvas id="sky"></canvas>
+      <div class="sky-vignette"></div>
+      <div class="topbar">
+        <button id="home" class="circle-btn" aria-label="Back">‹</button>
+        <button id="info" class="circle-btn" aria-label="About this sky">i</button>
+      </div>
+
+      <div class="chapter">
+        <div id="chapterKicker">CHAPTER I</div>
+        <h2 id="chapterTitle">A sky was waiting.</h2>
+        <p id="chapterText">Drag slowly. There are little things hidden up here.</p>
+      </div>
+
+      <div class="mode-switch" role="group" aria-label="Sky modes">
+        <button class="mode active" data-mode="wander">Wander</button>
+        <button class="mode" data-mode="constellations">Constellations</button>
+        <button class="mode" data-mode="notes">Hidden notes</button>
+      </div>
+
+      <div id="starCard" class="sheet hidden">
+        <button id="closeStar" class="sheet-x">×</button>
+        <div class="sheet-symbol">✦</div>
+        <div class="sheet-kicker" id="cardKicker">STAR</div>
+        <h3 id="cardName">Vega</h3>
+        <div class="sheet-meta" id="cardMeta">Lyra</div>
+        <p id="cardDesc"></p>
+        <div class="personal" id="cardPersonal"></div>
+        <button id="keepStar" class="pill small">Keep this one ♡</button>
+      </div>
+
+      <div id="constellationCard" class="sheet hidden">
+        <button id="closeConst" class="sheet-x">×</button>
+        <div class="sheet-kicker">YOUR ZODIAC</div>
+        <div class="big-symbol">♏</div>
+        <h3>Scorpius</h3>
+        <div class="sheet-meta">The constellation of your birthday</div>
+        <p>On a Scorpio birthday, it would be rude not to give the scorpion its own little moment.</p>
+        <div class="personal">“This one is yours. I left it glowing a little brighter.”</div>
+        <button id="showScorpio" class="pill small">Show me Scorpius ✦</button>
+      </div>
+
+      <div id="noteCard" class="sheet hidden">
+        <button id="closeNote" class="sheet-x">×</button>
+        <div class="sheet-symbol">♡</div>
+        <div class="sheet-kicker">YOU FOUND A NOTE</div>
+        <h3 id="noteTitle">A little secret</h3>
+        <p id="noteText"></p>
+        <div class="note-progress"><span id="foundCount">1</span> of <span id="noteTotal">5</span> found</div>
+      </div>
+
+      <div id="infoCard" class="sheet hidden">
+        <button id="closeInfo" class="sheet-x">×</button>
+        <div class="sheet-kicker">A SMALL NOTE</div>
+        <h3>About this sky</h3>
+        <p>This is the sky over Banaras on <b>30 October 2001</b>. We don't know your exact birth time, so I didn't make one up. Instead, you can wander through the whole night.</p>
+        <p class="personal">Somewhere in that night, you arrived. And years later, someone was lucky enough to love you. ♡</p>
+        <p class="fine">The map uses astronomical coordinates and calculates the apparent sky from Banaras. The experience intentionally highlights bright named stars and constellations for a smooth iPhone experience.</p>
+      </div>
+
+      <div id="finalPrompt" class="final-prompt hidden">
+        <div class="eyebrow">YOU FOUND THEM ALL</div>
+        <h2>One last thing…</h2>
+        <p>You found all the little notes I hid in your sky.</p>
+        <button id="letterBtn" class="pill primary">Open your letter ♡</button>
+      </div>
+
+      <div id="letter" class="letter hidden">
+        <button id="closeLetter" class="sheet-x">×</button>
+        <div class="letter-top">30 OCTOBER 2001 · BANARAS</div>
+        <h2>For Aakansha,</h2>
+        <p>I wish I could be there beside you tonight.</p>
+        <p>So I made you something small instead — a piece of the sky from the night you came into this world.</p>
+        <p>Every star you touched was already shining long before either of us knew the other existed.</p>
+        <p>And somehow, out of all the people, places and years between then and now, <i>I found you.</i></p>
+        <p>That feels a little bit like magic.</p>
+        <p>So whenever you miss me, come back here. Pick a star. Stay for a minute. Look up.</p>
+        <p class="love">Happy birthday, Akshu.<br>My favourite person under this enormous sky. ♡</p>
+        <div class="letter-sign">— yours</div>
+      </div>
+
+      <div class="controls">
+        <div class="time-line"><button id="play" class="play" aria-label="Play through the night">▶</button><input id="time" type="range" min="0" max="720" value="240" step="5" aria-label="Time through the night"></div>
+        <div class="time-labels"><span>6 PM</span><strong id="timeText">10:00 PM</strong><span>6 AM</span></div>
+      </div>
+      <div id="hint" class="hint">Tap a bright star · drag to look around</div>
+    </div>
+  </section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
